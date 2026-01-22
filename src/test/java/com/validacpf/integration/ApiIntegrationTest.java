@@ -43,7 +43,6 @@ class ApiIntegrationTest {
 			}
 			""".formatted(cpfValido);
 
-		// Executar requisição na API
 		mockMvc.perform(post("/api/validar-cpf")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestJson))
@@ -53,7 +52,6 @@ class ApiIntegrationTest {
 			.andExpect(jsonPath("$.mensagem").exists())
 			.andExpect(jsonPath("$.dataValidacao").exists());
 
-		// Verificar se foi salvo no Oracle
 		final var registros = repository.findAll();
 		assertFalse(registros.isEmpty(), "Deveria ter pelo menos um registro salvo no Oracle");
 
@@ -81,14 +79,12 @@ class ApiIntegrationTest {
 			}
 			""".formatted(cpfFormatado);
 
-		// Executar requisição na API
 		mockMvc.perform(post("/api/validar-cpf")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestJson))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.valido").exists());
 
-		// Verificar se foi salvo no Oracle (pode estar com ou sem formatação)
 		final var registros = repository.findAll();
 		assertFalse(registros.isEmpty(), "Deveria ter registro salvo no Oracle");
 
@@ -111,13 +107,11 @@ class ApiIntegrationTest {
 			}
 			""".formatted(cpfInvalido);
 
-		// Executar requisição na API
 		mockMvc.perform(post("/api/validar-cpf")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestJson))
 			.andExpect(status().isUnprocessableEntity());
 
-		// Verificar que NÃO foi salvo no Oracle (CPF inválido não passa da validação)
 		final var registros = repository.findAll();
 		assertTrue(registros.isEmpty(), "CPF inválido não deveria ser salvo no Oracle");
 	}
@@ -140,11 +134,9 @@ class ApiIntegrationTest {
 				.andExpect(status().isOk());
 		}
 
-		// Verificar se todos foram salvos no Oracle
 		final var registros = repository.findAll();
-		assertTrue(registros.size() >= 2, "Deveria ter pelo menos 2 registros salvos no Oracle");
+		assertTrue(registros.size() >= 2);
 
-		// Verificar que cada CPF foi salvo
 		for (final var cpf : cpfs) {
 			final var cpfSemFormatacao = cpf.replaceAll("[^0-9]", "");
 			final var encontrado = registros.stream()
@@ -168,7 +160,6 @@ class ApiIntegrationTest {
 
 		final var antes = LocalDateTime.now();
 
-		// Executar requisição
 		mockMvc.perform(post("/api/validar-cpf")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestJson))
@@ -176,7 +167,6 @@ class ApiIntegrationTest {
 
 		final var depois = LocalDateTime.now();
 
-		// Verificar dados salvos
 		final var registro = repository.findAll().stream()
 			.filter(r -> cpf.equals(r.getCpf()) || cpf.equals(r.getCpf().replaceAll("[^0-9]", "")))
 			.findFirst();

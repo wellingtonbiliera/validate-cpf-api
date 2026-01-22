@@ -79,10 +79,7 @@ class ValidaCpfEventProducerTest {
 
 		producer.publicarEvento(event);
 		
-		// Completa o future para acionar o whenComplete
 		future.complete(sendResult);
-		
-		// Aguarda um pouco para o whenComplete executar
 		Thread.sleep(100);
 		
 		verify(kafkaTemplate).send("valida-cpf-events", "12345678909", event);
