@@ -47,9 +47,9 @@ jobs:
         env:
           SPRING_PROFILES_ACTIVE: test
           
+      - name: Build application
+        run: ./gradlew build -x test
+        
       - name: Generate test report
         if: always()
-        run: ./gradlew jacocoTestReport -x jacocoTestCoverageVerification
-        
-      - name: Build application
-        run: ./gradlew build -x test -x jacocoTestCoverageVerification
+        run: ./gradlew jacocoTestReport
