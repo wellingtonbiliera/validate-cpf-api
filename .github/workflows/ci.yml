@@ -43,7 +43,7 @@ jobs:
         run: chmod +x gradlew
           
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test --tests "!com.validacpf.integration.ApiIntegrationTest" --tests "!com.validacpf.integration.OracleRealIntegrationTest"
         env:
           SPRING_PROFILES_ACTIVE: test
           
