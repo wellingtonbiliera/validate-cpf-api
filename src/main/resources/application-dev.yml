@@ -1,0 +1,13 @@
+# Configurações para desenvolvimento/teste
+# Ative com: SPRING_PROFILES_ACTIVE=dev
+
+spring:
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    com.validacpf: DEBUG
+    org.springframework.kafka: INFO

@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: valida-cpf
+  
+  # Oracle Database Configuration
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:XE
+    username: system
+    password: Oracle123
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # JPA/Hibernate Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+  
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      enable-idempotence: true
+
+server:
+  port: 8080
+
+# ReceitaWS Configuration
+receitaws:
+  url: http://localhost:8082
+
+# Kafka Topic
+kafka:
+  topic:
+    valida-cpf-events: valida-cpf-events
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# Logging Configuration
+logging:
+  level:
+    com.validacpf: INFO
+    org.springframework.kafka: WARN

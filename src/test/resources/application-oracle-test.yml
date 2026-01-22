@@ -1,0 +1,36 @@
+# Configurações para teste REAL com Oracle do docker-compose
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:XE
+    username: system
+    password: Oracle123
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 30000
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  
+  # Kafka - desabilitar para testes de integração simples
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+# ReceitaWS - usar mock local
+receitaws:
+  url: http://localhost:8082
+
+# Logging
+logging:
+  level:
+    com.validacpf: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    com.zaxxer.hikari: INFO

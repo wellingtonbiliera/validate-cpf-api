@@ -1,0 +1,118 @@
+services:
+  # Oracle Database
+  oracle:
+    image: container-registry.oracle.com/database/express:21.3.0-xe
+    container_name: valida-cpf-oracle
+    environment:
+      - ORACLE_PWD=Oracle123
+      - ORACLE_CHARACTERSET=AL32UTF8
+      - ORACLE_NLS_CHARACTERSET=AL32UTF8
+    ports:
+      - "1521:1521"
+      - "5500:5500"  # Oracle Enterprise Manager Express
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    networks:
+      - valida-cpf-network
+    healthcheck:
+      test: ["CMD-SHELL", "sqlplus -S system/Oracle123@localhost:1521/XE <<< 'SELECT 1 FROM DUAL;' | grep -q '1'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  # Zookeeper (necessário para Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: valida-cpf-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - valida-cpf-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 2181 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Kafka Broker
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: valida-cpf-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - valida-cpf-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # Kafka UI - Interface web para visualizar tópicos e mensagens
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: valida-cpf-kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - valida-cpf-network
+    restart: unless-stopped
+
+  # Mock HTTP Server para ReceitaWS
+  receitaws-mock:
+    build:
+      context: ./mock-receitaws
+      dockerfile: Dockerfile
+    container_name: valida-cpf-receitaws-mock
+    ports:
+      - "8082:8082"
+    networks:
+      - valida-cpf-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  oracle-data:
+    driver: local
+  kafka-data:
+    driver: local
+
+networks:
+  valida-cpf-network:
+    driver: bridge
