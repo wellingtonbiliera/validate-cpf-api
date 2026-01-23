@@ -1,0 +1,34 @@
+{
+  "Total" : {
+    "transaction" : "Total",
+    "sampleCount" : 18399,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 59.5272569161368,
+    "medianResTime" : 56.0,
+    "minResTime" : 8.0,
+    "maxResTime" : 273.0,
+    "pct1ResTime" : 93.0,
+    "pct2ResTime" : 109.0,
+    "pct3ResTime" : 145.0,
+    "throughput" : 307.40827374189666,
+    "receivedKBytesPerSec" : 104.05337723676736,
+    "sentKBytesPerSec" : 73.54983111988739
+  },
+  "POST /api/validar-cpf" : {
+    "transaction" : "POST /api/validar-cpf",
+    "sampleCount" : 18399,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 59.5272569161368,
+    "medianResTime" : 56.0,
+    "minResTime" : 8.0,
+    "maxResTime" : 273.0,
+    "pct1ResTime" : 93.0,
+    "pct2ResTime" : 109.0,
+    "pct3ResTime" : 145.0,
+    "throughput" : 307.40827374189666,
+    "receivedKBytesPerSec" : 104.05337723676736,
+    "sentKBytesPerSec" : 73.54983111988739
+  }
+}

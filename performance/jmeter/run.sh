@@ -16,7 +16,15 @@ echo "Rodando JMeter..."
 echo "  host=${JMETER_HOST} port=${JMETER_PORT}"
 echo "  threads=${JMETER_THREADS} rampUp=${JMETER_RAMP_UP}s duration=${JMETER_DURATION}s"
 
+# Se host for localhost, usar host.docker.internal para acessar o host do Docker
+if [ "${JMETER_HOST}" = "localhost" ] || [ "${JMETER_HOST}" = "127.0.0.1" ]; then
+  DOCKER_HOST="host.docker.internal"
+else
+  DOCKER_HOST="${JMETER_HOST}"
+fi
+
 docker run --rm \
+  --add-host=host.docker.internal:host-gateway \
   -u "$(id -u):$(id -g)" \
   -v "${ROOT_DIR}:/jmeter" \
   -w /jmeter \
@@ -25,7 +33,7 @@ docker run --rm \
   -t /jmeter/valida-cpf.jmx \
   -l /jmeter/results/results.jtl \
   -e -o /jmeter/results/report \
-  -Jhost="${JMETER_HOST}" \
+  -Jhost="${DOCKER_HOST}" \
   -Jport="${JMETER_PORT}" \
   -Jthreads="${JMETER_THREADS}" \
   -JrampUp="${JMETER_RAMP_UP}" \

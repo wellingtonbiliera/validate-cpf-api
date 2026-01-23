@@ -112,11 +112,13 @@
           <stringProp name="HTTPSampler.response_timeout">15000</stringProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 200" enabled="true">
-            <collectionProp name="Asserion.test_strings">
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP Success" enabled="true">
+            <collectionProp name="Assertion.test_strings">
               <stringProp name="49586">200</stringProp>
+              <stringProp name="49587">422</stringProp>
+              <stringProp name="49588">400</stringProp>
             </collectionProp>
-            <stringProp name="Assertion.custom_message">Esperado HTTP 200</stringProp>
+            <stringProp name="Assertion.custom_message">Esperado HTTP 200, 400 ou 422</stringProp>
             <boolProp name="Assertion.assume_success">false</boolProp>
             <intProp name="Assertion.test_type">8</intProp>
             <stringProp name="Assertion.scope">all</stringProp>
