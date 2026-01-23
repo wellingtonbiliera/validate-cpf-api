@@ -34,6 +34,9 @@ class ValidaCpfControllerTest {
 	@MockBean
 	private com.validacpf.adapter.rest.mapper.ValidaCpfMapper mapper;
 
+	@MockBean
+	private com.validacpf.domain.port.ValidacaoCpfRepositoryPort repositoryPort;
+
 	@Autowired
 	private ObjectMapper objectMapper;
 
