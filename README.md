@@ -1,21 +1,19 @@
 # API Validação de CPF
 
-API REST para validação de CPF usando Spring Boot, Oracle Database e Kafka.
+API REST para validação de CPF.
 
-## O que faz
+## Funcionalidades
 
-A API valida CPF de duas formas:
-- Validação local: verifica formato e dígitos verificadores
-- Consulta externa: busca dados na ReceitaWS (nome, data de nascimento, situação)
-
-Todas as validações são salvas no banco e eventos são publicados no Kafka.
+- Validação local de CPF (formato e dígitos)
+- Consulta externa na ReceitaWS
+- Verificar se CPF pode votar (user-info.herokuapp.com)
+- Verificar se CPF já votou em uma pauta
 
 ## Tecnologias
 
 - Java 17
 - Spring Boot 3.2.0
-- Oracle Database
-- Apache Kafka
+- H2 Database
 - Spring Data JPA
 - Spring Cloud OpenFeign
 - Swagger/OpenAPI
@@ -28,27 +26,15 @@ Todas as validações são salvas no banco e eventos são publicados no Kafka.
 
 ## Como executar
 
-### 1. Iniciar serviços
-
-```bash
-docker compose up -d
-```
-
-Aguarde 1-2 minutos para o Oracle ficar pronto.
-
-### 2. Inicializar banco de dados
-
-```bash
-docker exec -i valida-cpf-oracle sqlplus system/Oracle123@XE < scripts/init-database.sql
-```
-
-### 3. Executar aplicação
+### Executar aplicação
 
 ```bash
 ./gradlew bootRun
 ```
 
 A aplicação estará em `http://localhost:8080`
+
+**Nota:** O banco H2 é em memória, então os dados são perdidos ao reiniciar a aplicação. Para persistência, configure um banco de dados externo.
 
 ## Endpoints
 

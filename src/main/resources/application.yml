@@ -2,39 +2,23 @@ spring:
   application:
     name: valida-cpf
   
-  # Oracle Database Configuration
+  # H2 Database Configuration (banco em memória)
   datasource:
-    url: jdbc:oracle:thin:@localhost:1521:XE
-    username: system
-    password: Oracle123
-    driver-class-name: oracle.jdbc.OracleDriver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+    url: jdbc:h2:mem:valida_cpf
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
   
   # JPA/Hibernate Configuration
   jpa:
-    database-platform: org.hibernate.dialect.OracleDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: true
-  
-  # Kafka Configuration
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: all
-      retries: 3
-      enable-idempotence: true
 
 server:
   port: 8080
@@ -43,20 +27,23 @@ server:
 receitaws:
   url: http://localhost:8082
 
-# Kafka Topic
-kafka:
-  topic:
-    valida-cpf-events: valida-cpf-events
+# Votação API Configuration (para integração)
+votacao:
+  url: http://localhost:8080
 
 # Actuator Configuration
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,metrics,prometheus
   endpoint:
     health:
       show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 # Swagger/OpenAPI Configuration
 springdoc:
@@ -70,4 +57,3 @@ springdoc:
 logging:
   level:
     com.validacpf: INFO
-    org.springframework.kafka: WARN

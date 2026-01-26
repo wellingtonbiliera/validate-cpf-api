@@ -6,6 +6,10 @@ import com.validacpf.adapter.rest.mapper.ValidaCpfMapper;
 import com.validacpf.application.usecase.ValidarCpfUseCase;
 import com.validacpf.domain.port.ValidacaoCpfRepositoryPort;
 import com.validacpf.domain.valueobject.Cpf;
+import com.validacpf.adapter.userinfo.UserInfoAdapter;
+import com.validacpf.adapter.votacao.VotacaoFeignClient;
+import com.validacpf.adapter.rest.dto.PodeVotarResponse;
+import com.validacpf.adapter.rest.dto.JaVotouResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,93 +23,28 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
 @RestController
-@RequestMapping("/api")
-@Tag(name = "Validação de CPF", description = "API RESTful para validação de CPF")
+@RequestMapping("/api/v1")
+@Tag(name = "Validação de CPF")
 @RequiredArgsConstructor
 public class ValidaCpfController {
 
 	private final ValidarCpfUseCase validarCpfUseCase;
 	private final ValidaCpfMapper mapper;
 	private final ValidacaoCpfRepositoryPort repositoryPort;
+	private final UserInfoAdapter userInfoAdapter;
+	private final VotacaoFeignClient votacaoFeignClient;
 
 	@PostMapping("/validacoes-cpf")
-	@Operation(
-		summary = "Criar validação de CPF",
-		description = "Cria uma nova validação de CPF através de validação local e consulta ao serviço ReceitaWS"
-	)
-	@ApiResponses({
-		@ApiResponse(
-			responseCode = "200",
-			description = "Validação criada com sucesso",
-			content = @Content(schema = @Schema(implementation = ValidaCpfResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "400",
-			description = "Requisição inválida (formato ou campo ausente)",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "422",
-			description = "CPF inválido (validação)",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "503",
-			description = "Serviço externo indisponível",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "500",
-			description = "Erro interno do servidor",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		)
-	})
+	@Operation(summary = "Criar validação de CPF")
 	public ResponseEntity<ValidaCpfResponse> criarValidacao(@Valid @RequestBody final ValidaCpfRequest request) {
-		log.info("Requisição de criação de validação recebida para CPF: {}", request.getCpf());
-		
 		final var validacao = validarCpfUseCase.executar(request.getCpf());
-		final var response = mapper.toResponse(validacao);
-		
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(mapper.toResponse(validacao));
 	}
 
 	@GetMapping("/validacoes-cpf/{cpf}")
-	@Operation(
-		summary = "Consultar validação de CPF",
-		description = "Consulta a última validação realizada para um CPF específico"
-	)
-	@ApiResponses({
-		@ApiResponse(
-			responseCode = "200",
-			description = "Validação encontrada",
-			content = @Content(schema = @Schema(implementation = ValidaCpfResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "400",
-			description = "Formato de CPF inválido",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "404",
-			description = "Validação não encontrada para o CPF informado",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "500",
-			description = "Erro interno do servidor",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		)
-	})
-	public ResponseEntity<ValidaCpfResponse> consultarValidacao(
-		@Parameter(description = "CPF a ser consultado (com ou sem formatação)", 
-			example = "12345678901", 
-			required = true)
-		@PathVariable final String cpf) {
-		
-		log.info("Requisição de consulta de validação recebida para CPF: {}", cpf);
-		
+	@Operation(summary = "Consultar validação de CPF")
+	public ResponseEntity<ValidaCpfResponse> consultarValidacao(@PathVariable final String cpf) {
 		final var cpfValueObject = Cpf.criar(cpf);
 		final var validacao = repositoryPort.buscarPorCpf(cpfValueObject);
 		
@@ -113,48 +52,46 @@ public class ValidaCpfController {
 			return ResponseEntity.notFound().build();
 		}
 		
-		final var response = mapper.toResponse(validacao.get());
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(mapper.toResponse(validacao.get()));
 	}
 
-	@PostMapping("/validar-cpf")
-	@Operation(
-		summary = "Validar CPF",
-		description = "Valida um CPF através de validação local e consulta ao serviço ReceitaWS"
-	)
-	@ApiResponses({
-		@ApiResponse(
-			responseCode = "200",
-			description = "Validação realizada com sucesso",
-			content = @Content(schema = @Schema(implementation = ValidaCpfResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "400",
-			description = "Requisição inválida (formato ou campo ausente)",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "422",
-			description = "CPF inválido (validação)",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "503",
-			description = "Serviço externo indisponível",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		),
-		@ApiResponse(
-			responseCode = "500",
-			description = "Erro interno do servidor",
-			content = @Content(schema = @Schema(implementation = com.validacpf.adapter.rest.dto.ErrorResponse.class))
-		)
-	})
-	public ResponseEntity<ValidaCpfResponse> validarCpf(@Valid @RequestBody final ValidaCpfRequest request) {
-		log.info("Requisição de validação recebida para CPF: {}", request.getCpf());
-		
-		final var validacao = validarCpfUseCase.executar(request.getCpf());
-		final var response = mapper.toResponse(validacao);
-		
+	@GetMapping("/validacoes-cpf/{cpf}/pode-votar")
+	@Operation(summary = "Verificar se CPF pode votar")
+	public ResponseEntity<PodeVotarResponse> podeVotar(@PathVariable final String cpf) {
+		final var cpfValueObject = Cpf.criar(cpf);
+		final var podeVotar = userInfoAdapter.podeVotar(cpfValueObject.getValor());
+		final var response = new PodeVotarResponse();
+		response.setStatus(podeVotar ? "ABLE_TO_VOTE" : "UNABLE_TO_VOTE");
 		return ResponseEntity.ok(response);
 	}
+	
+	@GetMapping("/validacoes-cpf/{cpf}/ja-votou/{pautaId}")
+	@Operation(summary = "Verificar se CPF já votou na pauta")
+	public ResponseEntity<JaVotouResponse> jaVotou(
+		@PathVariable final String cpf,
+		@PathVariable final Long pautaId) {
+		final var cpfValueObject = Cpf.criar(cpf);
+		final var validacao = repositoryPort.buscarPorCpf(cpfValueObject);
+		final var associadoId = validacao.map(v -> v.getCpf().getValor())
+			.orElse(cpfValueObject.getValor());
+		
+		try {
+			final var responseVotacao = votacaoFeignClient.verificarJaVotou(pautaId, associadoId);
+			final var response = new JaVotouResponse();
+			response.setJaVotou(responseVotacao != null && Boolean.TRUE.equals(responseVotacao.getJaVotou()));
+			return ResponseEntity.ok(response);
+		} catch (final Exception e) {
+			final var response = new JaVotouResponse();
+			response.setJaVotou(false);
+			return ResponseEntity.ok(response);
+		}
+	}
+	
+	@PostMapping("/validar-cpf")
+	@Operation(summary = "Validar CPF")
+	public ResponseEntity<ValidaCpfResponse> validarCpf(@Valid @RequestBody final ValidaCpfRequest request) {
+		final var validacao = validarCpfUseCase.executar(request.getCpf());
+		return ResponseEntity.ok(mapper.toResponse(validacao));
+	}
 }
+

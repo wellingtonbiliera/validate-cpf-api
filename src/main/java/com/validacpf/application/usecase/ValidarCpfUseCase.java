@@ -3,7 +3,6 @@ package com.validacpf.application.usecase;
 import com.validacpf.domain.exception.ServicoExternoException;
 import com.validacpf.domain.model.DadosReceitaWs;
 import com.validacpf.domain.model.ValidacaoCpf;
-import com.validacpf.domain.port.EventPublisherPort;
 import com.validacpf.domain.port.ReceitaWsPort;
 import com.validacpf.domain.port.ValidacaoCpfRepositoryPort;
 import com.validacpf.domain.valueobject.Cpf;
@@ -21,19 +20,15 @@ public class ValidarCpfUseCase {
 
 	private final ReceitaWsPort receitaWsPort;
 	private final ValidacaoCpfRepositoryPort repositoryPort;
-	private final EventPublisherPort eventPublisherPort;
 
 	@Transactional
 	public ValidacaoCpf executar(final String cpfInput) {
 		log.info("Iniciando validação de CPF: {}", cpfInput);
-
 		final var cpf = Cpf.criar(cpfInput);
 		final var validacao = processarValidacao(cpf);
-
 		final var validacaoSalva = repositoryPort.salvar(validacao);
-		publicarEventoAssincrono(validacaoSalva);
-
-		log.info("Validação concluída - CPF: {}, Válido: {}", cpf, validacaoSalva.getValido());
+		log.info("Validação de CPF concluída - CPF: {}, Válido: {}", 
+			cpf.getValorFormatado(), validacaoSalva.getValido());
 		return validacaoSalva;
 	}
 
@@ -50,10 +45,8 @@ public class ValidarCpfUseCase {
 		try {
 			return receitaWsPort.consultarCpf(cpf);
 		} catch (final ServicoExternoException e) {
-			log.error("Erro ao consultar ReceitaWS: {}", e.getMessage());
 			throw e;
 		} catch (final Exception e) {
-			log.error("Erro inesperado ao consultar ReceitaWS", e);
 			throw new ServicoExternoException("Erro ao consultar serviço externo", e);
 		}
 	}
@@ -76,11 +69,4 @@ public class ValidarCpfUseCase {
 		return ValidacaoCpf.criarValidacaoInvalida(cpf, motivo);
 	}
 
-	private void publicarEventoAssincrono(final ValidacaoCpf validacao) {
-		try {
-			eventPublisherPort.publicarEventoValidacao(validacao);
-		} catch (final Exception e) {
-			log.error("Erro ao publicar evento de validação para CPF: {}", validacao.getCpf(), e);
-		}
-	}
 }

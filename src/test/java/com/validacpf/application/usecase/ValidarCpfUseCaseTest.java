@@ -3,7 +3,6 @@ package com.validacpf.application.usecase;
 import com.validacpf.domain.exception.ServicoExternoException;
 import com.validacpf.domain.model.DadosReceitaWs;
 import com.validacpf.domain.model.ValidacaoCpf;
-import com.validacpf.domain.port.EventPublisherPort;
 import com.validacpf.domain.port.ReceitaWsPort;
 import com.validacpf.domain.port.ValidacaoCpfRepositoryPort;
 import com.validacpf.domain.valueobject.Cpf;
@@ -29,9 +28,6 @@ class ValidarCpfUseCaseTest {
 
 	@Mock
 	private ValidacaoCpfRepositoryPort repositoryPort;
-
-	@Mock
-	private EventPublisherPort eventPublisherPort;
 
 	@InjectMocks
 	private ValidarCpfUseCase useCase;
@@ -69,7 +65,6 @@ class ValidarCpfUseCaseTest {
 		assertNotNull(resultado);
 		assertTrue(resultado.getValido());
 		verify(repositoryPort).salvar(any(ValidacaoCpf.class));
-		verify(eventPublisherPort).publicarEventoValidacao(any(ValidacaoCpf.class));
 	}
 
 	@Test
@@ -134,17 +129,4 @@ class ValidarCpfUseCaseTest {
 			() -> useCase.executar("12345678909"));
 	}
 
-	@Test
-	void naoDeveBloquearQuandoEventoFalha() {
-		when(receitaWsPort.consultarCpf(any(Cpf.class)))
-			.thenReturn(Optional.of(dadosValidos));
-		when(repositoryPort.salvar(any(ValidacaoCpf.class)))
-			.thenReturn(validacaoSalva);
-		doThrow(new RuntimeException("Erro no evento"))
-			.when(eventPublisherPort).publicarEventoValidacao(any(ValidacaoCpf.class));
-
-		ValidacaoCpf resultado = useCase.executar("12345678909");
-
-		assertNotNull(resultado);
-	}
 }
